@@ -325,11 +325,11 @@
 
   //GHL field IDs for Available Checkboxes
   const availableCheckboxesIDs = {
-    Monday: "e8I1x0tOzIzCAb3QVz89",
-    Tuesday: "fSrSJNEU0dY5HQsw6f0i",
-    Wednesday: "HLUQrg3zCzJNu5i18uyc",
-    Thursday: "g6TyLXJcVtqyUD6nAnr2",
-    Friday: "se76mRJdKN70H7N7i2Uc"
+    Monday: "Monday_M20pFycLmpz0Inb3o6gN",
+    Tuesday: "Tuesday_M20pFycLmpz0Inb3o6gN",
+    Wednesday: "Wednesday_M20pFycLmpz0Inb3o6gN",
+    Thursday: "Thursday_M20pFycLmpz0Inb3o6gN",
+    Friday: "Friday_M20pFycLmpz0Inb3o6gN"
   }
 
   // Find element by incomplete ID (matches elements whose ID starts with incomplete_id)
@@ -343,7 +343,7 @@
     return element.id;
   }
 
-  // Convert slider value to time (slider value is in half-hour increments)
+  // Convert slider value to time (slider value is in 15-minute increments)
   function sliderValueToTime(value) {
     const hours = Math.floor(value / 4);
     const minutes = (value % 4) * 15;
@@ -434,6 +434,7 @@
 
   function toggleDay(day) {
     weekdaysData[day].enabled = !weekdaysData[day].enabled;
+    updateGHLCheckbox(availableCheckboxesIDs[day], weekdaysData[day].enabled);
     const dayId = day.toLowerCase();
     const card = document.getElementById(`card-${dayId}`);
 
@@ -731,6 +732,20 @@
     weekdays.forEach(day => {
       updateSlider(day, null);
     });
+  }
+
+  function updateGHLCheckbox(fieldId, isChecked) {
+    const el = document.querySelector(`[id^="${fieldId}"]`);
+    console.log(el);
+    if (!el) {
+      console.warn(`⚠️ Checkbox field ${fieldId} not found`);
+      return;
+    }
+    el.checked = isChecked;
+    el.disabled = false; // just in case GHL marks it disabled
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+    console.log(`✅ Updated checkbox ${fieldId} → ${el.value}`);
   }
 
 
