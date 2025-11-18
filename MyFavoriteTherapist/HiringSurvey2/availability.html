@@ -1,0 +1,742 @@
+
+<body>
+<div class="availability-container">
+  <h2 class="availability-main-title">Weekly Availability</h2>
+  <p class="availability-subtitle">Select your available days and time ranges</p>
+
+
+
+
+  <div id="weekdaysContainer"></div>
+</div>
+<style>
+  .availability-container {
+  max-width: 600px;
+  margin: 0 auto;
+  font-family: Arial, sans-serif;
+}
+
+.availability-container .availability-main-title {
+  color: #3f2f92 !important;
+  text-align: center !important;
+  margin-bottom: 5px !important;
+  font-size: 24px !important;
+  font-weight: bold !important;
+}
+
+.availability-container .availability-subtitle {
+  text-align: center !important;
+  color: #667 !important;
+  margin-bottom: 20px !important;
+  font-size: 14px !important;
+}
+
+.availability-container .day-card {
+  background-color: white;
+  border-radius: 8px;
+  border-bottom: solid 0.1cm #3f2f92;
+  margin-bottom: 15px;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.1), 0 6px 20px 0 rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.availability-container .day-card.disabled {
+  opacity: 0.6;
+}
+
+.availability-container .day-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 15px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.availability-container .day-header:hover {
+  background-color: #e6e0ff;
+}
+
+.availability-container .day-checkbox {
+  width: 18px;
+  height: 18px;
+  margin-right: 12px;
+  cursor: pointer;
+  accent-color: #3f2f92;
+  border-radius: 50%;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 2px solid #3f2f92;
+  position: relative;
+}
+
+.availability-container .day-checkbox:checked {
+  background-color: #3f2f92;
+}
+
+.availability-container .day-checkbox:checked::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.availability-container .day-name {
+  flex: 1;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: #3f2f92 !important;
+}
+
+.availability-container .expand-icon {
+  color: #3f2f92;
+  font-size: 12px;
+}
+
+.availability-container .expand-icon.expanded {
+  transform: rotate(180deg);
+}
+
+.availability-container .time-picker-container {
+  max-height: 0;
+  overflow: hidden;
+}
+
+.availability-container .time-picker-container.expanded {
+  max-height: 300px;
+  /* padding: 0 15px 15px 15px; */
+}
+
+.availability-container .double-slider-wrapper-unique {
+  background-color: #f8f9fb;
+  width: 100%;
+  padding: 15px 0;
+  box-shadow: inset 0 6px 8px -4px rgba(0, 0, 0, 0.1);
+}
+
+.availability-container .slider-inner-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 90%;
+  margin: 0 auto;
+}
+
+.availability-container .slider-title-unique {
+  color: #3f2f92 !important;
+  margin-bottom: 6px !important;
+  font-size: 16px !important;
+  font-weight: normal !important;
+}
+
+.availability-container .range-container-unique {
+  position: relative;
+  width: 100%;
+  height: 40px; /* total height for thumb + track */
+  cursor: pointer;
+}
+
+.availability-container .slider-track-unique {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 6px;
+  border-radius: 3px;
+  background-color: #d5d5d5;
+  width: 100%;
+  z-index: 1;
+}
+
+.availability-container input[type="range"].range-input-unique {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 100%;
+  background: none;
+  pointer-events: none;
+  -webkit-appearance: none;
+  appearance: none;
+  z-index: 2;
+  margin: 0;
+  height: 6px;
+}
+
+/* Chrome / Edge */
+.availability-container
+  input[type="range"].range-input-unique::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  pointer-events: all;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: #3f2f92;
+  cursor: pointer;
+  margin-top: 0; /* perfect vertical alignment */
+  transition: width 0.1s ease-in-out, height 0.1s ease-in-out;
+}
+
+/* Firefox */
+.availability-container
+  input[type="range"].range-input-unique::-moz-range-thumb {
+  pointer-events: all;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: #3f2f92;
+  cursor: pointer;
+  border: none;
+  transition: width 0.1s ease-in-out, height 0.1s ease-in-out;
+}
+
+/* Hover state - Chrome / Edge */
+.availability-container
+  input[type="range"].range-input-unique.closest-handle::-webkit-slider-thumb {
+  width: 20px;
+  height: 20px;
+}
+
+/* Hover state - Firefox */
+.availability-container
+  input[type="range"].range-input-unique.closest-handle::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+}
+
+.availability-container
+  input[type="range"].range-input-unique::-moz-range-track {
+  background: transparent;
+}
+
+.availability-container .slider-range-fill-unique {
+  position: absolute;
+  height: 6px;
+  border-radius: 3px;
+  background-color: #3f2f92;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+
+.availability-container .value-labels-unique {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-weight: bold !important;
+  color: #3f2f92 !important;
+  margin-top: 12px;
+}
+
+.availability-container .hover-time-tooltip {
+  position: absolute;
+  bottom: calc(100% + 2px);
+  background-color: #3f2f92;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+  z-index: 10;
+}
+
+.availability-container .hover-time-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #3f2f92;
+}
+
+.availability-container .hover-time-tooltip.visible {
+  opacity: 1;
+}
+
+.availability-container .hover-indicator-line {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 6px;
+  background-color: #3f2f92;
+  opacity: 0;
+  /* transition: opacity 0.2s ease-in-out, background-color 0.2s ease-in-out; */
+  pointer-events: none;
+  z-index: 9;
+}
+
+.availability-container .hover-indicator-line.visible {
+  opacity: 0.6;
+}
+
+.availability-container .hover-indicator-line.inside-range {
+  background-color: rgba(255, 255, 255, 1);
+  opacity: 1;
+}
+
+.availability-container .hover-indicator-line.outside-range {
+  background-color: #3f2f92;
+}
+
+</style>
+<script>
+  const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  const weekdaysData = {};
+
+  // Initialize data structure for each weekday
+  weekdays.forEach(day => {
+    weekdaysData[day] = {
+      enabled: false,
+      expanded: false,
+      minHour: 36, // 9:00 (9 * 4)
+      maxHour: 68  // 17:00 (17 * 4)
+    };
+  });
+
+  // GHL field IDs for end times
+  const fieldIdsEnd = {
+    Monday: "zIJLEi9hTAsIwtNtubqk",
+    Tuesday: "plQvEYun0QWOjgEXLjSE",
+    Wednesday: "4TIX0yyp1eMSSIF06PZu",
+    Thursday: "F1zt2mI4UbzLDGwBI3SW",
+    Friday: "WjWirf4Kfik61fpIzRJB"
+  };
+
+  // GHL field IDs for start times
+  const fieldIdsStart = {
+    Monday: "njsBAyTHuNPXs2SAkBjz",
+    Tuesday: "EZXLLlwc124zgZnGrlAD",
+    Wednesday: "ItFnXXx1L3Ucl37mRC0j",
+    Thursday: "LWMdKXR5im4BAiNEvJOw",
+    Friday: "IjYAQVdei11PB6CG2P2Z"
+  };
+
+  //GHL field IDs for Available Checkboxes
+  const availableCheckboxesIDs = {
+    Monday: "e8I1x0tOzIzCAb3QVz89",
+    Tuesday: "fSrSJNEU0dY5HQsw6f0i",
+    Wednesday: "HLUQrg3zCzJNu5i18uyc",
+    Thursday: "g6TyLXJcVtqyUD6nAnr2",
+    Friday: "se76mRJdKN70H7N7i2Uc"
+  }
+
+  // Find element by incomplete ID (matches elements whose ID starts with incomplete_id)
+  function FindID(incomplete_id) {
+    const element = document.querySelector(`[id^="${incomplete_id}"]`);
+    if (!element) {
+      console.warn(`⚠️ No element found with ID starting with: ${incomplete_id}`);
+      return null;
+    }
+    console.log(`✅ Found element with ID: ${element.id}`);
+    return element.id;
+  }
+
+  // Convert slider value to time (slider value is in half-hour increments)
+  function sliderValueToTime(value) {
+    const hours = Math.floor(value / 4);
+    const minutes = (value % 4) * 15;
+    return { hours, minutes };
+  }
+
+  // Format time for display (12-hour format with AM/PM)
+  function formatTime(sliderValue) {
+    const { hours, minutes } = sliderValueToTime(sliderValue);
+    const suffix = hours >= 12 ? "PM" : "AM";
+    const displayHour = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours;
+    const displayMinutes = minutes.toString().padStart(2, '0');
+    return `${displayHour}:${displayMinutes} ${suffix}`;
+  }
+
+  // Convert slider value to 24-hour integer format (e.g., 2000 for 20:00)
+  function sliderValueTo24HourInt(sliderValue) {
+    const { hours, minutes } = sliderValueToTime(sliderValue);
+    return hours * 100 + minutes;
+  }
+
+  function createDayCard(day) {
+    const dayId = day.toLowerCase();
+
+    return `
+      <div class="day-card ${!weekdaysData[day].enabled ? 'disabled' : ''}" id="card-${dayId}">
+        <input type="hidden" name="custom_values[${FindID(availableCheckboxesIDs[day])}]" id="is_available_${dayId}_monday_label" value=${(weekdaysData[day].enabled) ? "Yes" : "No"}">
+        <div class="day-header" onclick="toggleExpand('${day}')">
+          <input
+            type="checkbox"
+            class="day-checkbox"
+            id="checkbox-${dayId}"
+            ${weekdaysData[day].enabled ? 'checked' : ''}
+            onclick="event.stopPropagation(); toggleDay('${day}')"
+          />
+          <span class="day-name">${day}</span>
+          <span class="expand-icon ${weekdaysData[day].expanded ? 'expanded' : ''}" id="icon-${dayId}">▼</span>
+        </div>
+        <div class="time-picker-container ${weekdaysData[day].expanded ? 'expanded' : ''}" id="picker-${dayId}">
+          <div class="double-slider-wrapper-unique">
+            <div class="slider-inner-content">
+              <h3 class="slider-title-unique">Hours available</h3>
+
+              <!-- Hidden inputs linked to GHL fields -->
+              <input type="hidden" name="custom_values[${fieldIdsEnd[day]}]" id="${dayId}_end_time" value="${sliderValueTo24HourInt(weekdaysData[day].maxHour)}">
+              <input type="hidden" name="custom_values[${fieldIdsStart[day]}]" id="${dayId}_start_time" value="${sliderValueTo24HourInt(weekdaysData[day].minHour)}">
+
+
+
+              <div class="range-container-unique" onmousedown="handleTrackClick('${day}', event)" onmousemove="showHoverTime('${day}', event)" onmouseenter="showHoverTooltip('${day}')" onmouseleave="hideHoverTooltip('${day}')">
+                <div class="slider-track-unique"></div>
+                <div class="slider-range-fill-unique" id="fill-${dayId}"></div>
+                <div class="hover-time-tooltip" id="hover-${dayId}">12:00 PM</div>
+                <div class="hover-indicator-line" id="indicator-${dayId}"></div>
+
+                <input
+                  type="range"
+                  min="34"
+                  max="70"
+                  step="1"
+                  value="${weekdaysData[day].minHour}"
+                  id="rangeMin-${dayId}"
+                  class="range-input-unique"
+                  oninput="updateSlider('${day}', event)"
+                />
+                <input
+                  type="range"
+                  min="34"
+                  max="70"
+                  step="1"
+                  value="${weekdaysData[day].maxHour}"
+                  id="rangeMax-${dayId}"
+                  class="range-input-unique"
+                  oninput="updateSlider('${day}', event)"
+                />
+              </div>
+
+              <div class="value-labels-unique">
+                <span id="minValue-${dayId}">${formatTime(weekdaysData[day].minHour)}</span>
+                <span id="maxValue-${dayId}">${formatTime(weekdaysData[day].maxHour)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function toggleDay(day) {
+    weekdaysData[day].enabled = !weekdaysData[day].enabled;
+    const dayId = day.toLowerCase();
+    const card = document.getElementById(`card-${dayId}`);
+
+    if (weekdaysData[day].enabled) {
+      card.classList.remove('disabled');
+      weekdaysData[day].expanded = true;
+    } else {
+      card.classList.add('disabled');
+      weekdaysData[day].expanded = false;
+    }
+
+    renderWeekdays();
+  }
+
+  function toggleExpand(day) {
+    if (!weekdaysData[day].enabled) {
+      toggleDay(day);
+      return;
+    };
+
+    weekdaysData[day].expanded = !weekdaysData[day].expanded;
+    const dayId = day.toLowerCase();
+    const picker = document.getElementById(`picker-${dayId}`);
+    const icon = document.getElementById(`icon-${dayId}`);
+
+    if (weekdaysData[day].expanded) {
+      picker.classList.add('expanded');
+      icon.classList.add('expanded');
+    } else {
+      picker.classList.remove('expanded');
+      icon.classList.remove('expanded');
+    }
+  }
+
+  function showHoverTime(day, event) {
+    const dayId = day.toLowerCase();
+    const tooltip = document.getElementById(`hover-${dayId}`);
+    const indicator = document.getElementById(`indicator-${dayId}`);
+    const track = event.currentTarget;
+    const rangeMin = document.getElementById(`rangeMin-${dayId}`);
+    const rangeMax = document.getElementById(`rangeMax-${dayId}`);
+
+    // Don't show tooltip/indicator if currently dragging
+    if (track.dataset.dragging === 'true') {
+      return;
+    }
+
+    // Get mouse position relative to track
+    const rect = track.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const trackWidth = rect.width;
+
+    // Convert to slider value
+    const sliderMin = 34;
+    const sliderMax = 70;
+    const mousePercent = Math.max(0, Math.min(1, mouseX / trackWidth));
+    const mouseValue = Math.round(sliderMin + (mousePercent * (sliderMax - sliderMin)));
+
+    // Calculate snapped position based on the step value
+    const snappedPercent = ((mouseValue - sliderMin) / (sliderMax - sliderMin)) * 100;
+
+    // Get current slider values
+    const minVal = parseInt(rangeMin.value);
+    const maxVal = parseInt(rangeMax.value);
+
+    // Update tooltip content and snapped position
+    tooltip.textContent = formatTime(mouseValue);
+    tooltip.style.left = snappedPercent + '%';
+
+    // Update indicator line position
+    indicator.style.left = snappedPercent + '%';
+
+    // Check if the hover position is inside the selected range
+    const isInsideRange = mouseValue > minVal && mouseValue < maxVal;
+
+    // Update indicator color based on position
+    if (isInsideRange) {
+      indicator.classList.add('inside-range');
+      indicator.classList.remove('outside-range');
+    } else {
+      indicator.classList.add('outside-range');
+      indicator.classList.remove('inside-range');
+    }
+
+    // Determine which handle is closer and enlarge it
+    const distanceToMin = Math.abs(mouseValue - minVal);
+    const distanceToMax = Math.abs(mouseValue - maxVal);
+
+    if (distanceToMin < distanceToMax) {
+      rangeMin.classList.add('closest-handle');
+      rangeMax.classList.remove('closest-handle');
+    } else {
+      rangeMax.classList.add('closest-handle');
+      rangeMin.classList.remove('closest-handle');
+    }
+
+    // Only show tooltip and indicator if not hovering over an existing slider position
+    if (mouseValue === minVal || mouseValue === maxVal) {
+      tooltip.classList.remove('visible');
+      indicator.classList.remove('visible');
+    } else {
+      tooltip.classList.add('visible');
+      indicator.classList.add('visible');
+    }
+  }
+
+  function showHoverTooltip(day) {
+    // Visibility is now controlled by showHoverTime based on position
+    // This function exists for the mouseenter event but doesn't force visibility
+  }
+
+  function hideHoverTooltip(day) {
+    const dayId = day.toLowerCase();
+    const tooltip = document.getElementById(`hover-${dayId}`);
+    const indicator = document.getElementById(`indicator-${dayId}`);
+    const rangeMin = document.getElementById(`rangeMin-${dayId}`);
+    const rangeMax = document.getElementById(`rangeMax-${dayId}`);
+
+    tooltip.classList.remove('visible');
+    indicator.classList.remove('visible');
+    indicator.classList.remove('inside-range');
+    indicator.classList.remove('outside-range');
+
+    // Remove enlarged handle effect
+    rangeMin.classList.remove('closest-handle');
+    rangeMax.classList.remove('closest-handle');
+  }
+
+  function handleTrackClick(day, event) {
+    const dayId = day.toLowerCase();
+    const track = event.currentTarget;
+    const rangeMin = document.getElementById(`rangeMin-${dayId}`);
+    const rangeMax = document.getElementById(`rangeMax-${dayId}`);
+    const tooltip = document.getElementById(`hover-${dayId}`);
+    const indicator = document.getElementById(`indicator-${dayId}`);
+
+    // Set dragging flag to prevent tooltip/indicator from showing
+    track.dataset.dragging = 'true';
+
+    // Immediately hide tooltip and indicator
+    tooltip.classList.remove('visible');
+    indicator.classList.remove('visible');
+    indicator.classList.remove('inside-range');
+    indicator.classList.remove('outside-range');
+
+    // Remove enlarged handle effect
+    rangeMin.classList.remove('closest-handle');
+    rangeMax.classList.remove('closest-handle');
+
+    // Get click position relative to track
+    const rect = track.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const trackWidth = rect.width;
+
+    // Convert click position to slider value
+    const sliderMin = 34; // 8:30
+    const sliderMax = 70; // 17:30
+    const clickPercent = Math.max(0, Math.min(1, clickX / trackWidth));
+    const clickValue = Math.round(sliderMin + (clickPercent * (sliderMax - sliderMin)));
+
+    // Get current values
+    const minVal = parseInt(rangeMin.value);
+    const maxVal = parseInt(rangeMax.value);
+
+    // Determine which handle is closer
+    const distanceToMin = Math.abs(clickValue - minVal);
+    const distanceToMax = Math.abs(clickValue - maxVal);
+
+    // Determine which handle to drag
+    const isDraggingMin = distanceToMin < distanceToMax;
+    const activeInput = isDraggingMin ? rangeMin : rangeMax;
+
+    // Move the closer handle immediately
+    activeInput.value = clickValue;
+    updateSlider(day, { target: activeInput });
+
+    // Start dragging
+    const onMouseMove = (e) => {
+      const rect = track.getBoundingClientRect();
+      const moveX = e.clientX - rect.left;
+      const movePercent = Math.max(0, Math.min(1, moveX / rect.width));
+      const moveValue = Math.round(sliderMin + (movePercent * (sliderMax - sliderMin)));
+
+      activeInput.value = moveValue;
+      updateSlider(day, { target: activeInput });
+
+      // Ensure tooltip and indicator stay hidden during drag
+      tooltip.classList.remove('visible');
+      indicator.classList.remove('visible');
+      indicator.classList.remove('inside-range');
+      indicator.classList.remove('outside-range');
+    };
+
+    const onMouseUp = (e) => {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+
+      // Clear dragging flag
+      track.dataset.dragging = 'false';
+
+      // Check if mouse is still over the track and show tooltip again
+      const rect = track.getBoundingClientRect();
+      const mouseX = e.clientX;
+      const mouseY = e.clientY;
+
+      if (mouseX >= rect.left && mouseX <= rect.right &&
+          mouseY >= rect.top && mouseY <= rect.bottom) {
+        // Trigger showHoverTime to check position and show tooltip if appropriate
+        const mouseEvent = { currentTarget: track, clientX: mouseX };
+        showHoverTime(day, mouseEvent);
+      }
+    };
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  }
+
+  function updateSlider(day, event) {
+    const dayId = day.toLowerCase();
+    const rangeMin = document.getElementById(`rangeMin-${dayId}`);
+    const rangeMax = document.getElementById(`rangeMax-${dayId}`);
+    const minValue = document.getElementById(`minValue-${dayId}`);
+    const maxValue = document.getElementById(`maxValue-${dayId}`);
+    const fill = document.getElementById(`fill-${dayId}`);
+
+    const minGap = 4; // Minimum 1 hour gap (4 half-hour increments)
+    const sliderMin = 34; // 8:30 (8 * 4 + 2)
+    const sliderMax = 70; // 17:30 (17 * 4 + 2)
+
+    let minVal = parseInt(rangeMin.value);
+    let maxVal = parseInt(rangeMax.value);
+
+    if (maxVal - minVal <= minGap) {
+      if (event && event.target === rangeMin) {
+        rangeMin.value = maxVal - minGap;
+      } else {
+        rangeMax.value = minVal + minGap;
+      }
+    }
+
+    minVal = parseInt(rangeMin.value);
+    maxVal = parseInt(rangeMax.value);
+
+    const percentMin = ((minVal - sliderMin) / (sliderMax - sliderMin)) * 100;
+    const percentMax = ((maxVal - sliderMin) / (sliderMax - sliderMin)) * 100;
+
+    fill.style.left = percentMin + "%";
+    fill.style.width = percentMax - percentMin + "%";
+
+    minValue.textContent = formatTime(minVal);
+    maxValue.textContent = formatTime(maxVal);
+
+    // Update data
+    weekdaysData[day].minHour = minVal;
+    weekdaysData[day].maxHour = maxVal;
+
+    // Convert to 24-hour integer format
+    const startTime24h = sliderValueTo24HourInt(minVal);
+    const endTime24h = sliderValueTo24HourInt(maxVal);
+
+    // Update hidden inputs
+    const startInput = document.getElementById(`${dayId}_start_time`);
+    const endInput = document.getElementById(`${dayId}_end_time`);
+    if (startInput && endInput) {
+      startInput.value = startTime24h;
+      endInput.value = endTime24h;
+    }
+
+    // Update GHL fields
+    updateGHLField(fieldIdsStart[day], startTime24h);
+    updateGHLField(fieldIdsEnd[day], endTime24h);
+
+    // Log the 24-hour integer format values (for debugging or use in AJAX)
+    console.log(`${day}: ${startTime24h} - ${endTime24h}`);
+  }
+
+  function updateGHLField(fieldId, value) {
+    const el = document.querySelector(`[name="${fieldId}"]`);
+    if (!el) {
+      console.warn(`⚠️ Field ${fieldId} not found`);
+      return;
+    }
+    el.value = value;
+    el.disabled = false; // just in case GHL marks it disabled
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+    console.log(`✅ Updated ${fieldId} → ${value}`);
+  }
+
+  function renderWeekdays() {
+    const container = document.getElementById('weekdaysContainer');
+    container.innerHTML = weekdays.map(day => createDayCard(day)).join('');
+
+    // Update all sliders after rendering
+    weekdays.forEach(day => {
+      updateSlider(day, null);
+    });
+  }
+
+
+  // Initialize on page load
+  renderWeekdays();
+</script>
+
+</body>
+</html>
