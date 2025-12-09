@@ -339,7 +339,7 @@
       console.warn(`⚠️ No element found with ID starting with: ${incomplete_id}`);
       return null;
     }
-    console.log(`✅ Found element with ID: ${element.id}`);
+    // console.log(`✅ Found element with ID: ${element.id}`);
     return element.id;
   }
 
@@ -708,7 +708,7 @@
     updateGHLField(fieldIdsEnd[day], endTime24h);
 
     // Log the 24-hour integer format values (for debugging or use in AJAX)
-    console.log(`${day}: ${startTime24h} - ${endTime24h}`);
+    // console.log(`${day}: ${startTime24h} - ${endTime24h}`);
   }
 
   function updateGHLField(fieldId, value) {
@@ -721,7 +721,7 @@
     el.disabled = false; // just in case GHL marks it disabled
     el.dispatchEvent(new Event("input", { bubbles: true }));
     el.dispatchEvent(new Event("change", { bubbles: true }));
-    console.log(`✅ Updated ${fieldId} → ${value}`);
+    // console.log(`✅ Updated ${fieldId} → ${value}`);
   }
 
   function renderWeekdays() {
@@ -736,7 +736,7 @@
 
   function updateGHLCheckbox(fieldId, isChecked) {
     const el = document.querySelector(`[id^="${fieldId}"]`);
-    console.log(el);
+    // console.log(el);
     if (!el) {
       console.warn(`⚠️ Checkbox field ${fieldId} not found`);
       return;
@@ -745,7 +745,7 @@
     el.disabled = false; // just in case GHL marks it disabled
     el.dispatchEvent(new Event("input", { bubbles: true }));
     el.dispatchEvent(new Event("change", { bubbles: true }));
-    console.log(`✅ Updated checkbox ${fieldId} → ${el.value}`);
+    // console.log(`✅ Updated checkbox ${fieldId} → ${el.value}`);
   }
 
 
