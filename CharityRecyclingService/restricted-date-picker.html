@@ -1,0 +1,319 @@
+<body>
+<div class="date-picker-container">
+  <h2 class="date-picker-title">Select a Pickup Date</h2>
+  <p class="date-picker-subtitle">Choose from available dates below</p>
+  <div id="dateOptionsContainer" class="date-options-scroll"></div>
+  <p class="no-dates-message" id="noDatesMessage" style="display: none;">No available dates found. Please go back and verify your ZIP code.</p>
+</div>
+
+<style>
+.date-picker-container {
+  max-width: 600px;
+  margin: 0 auto;
+  font-family: Arial, sans-serif;
+}
+
+.date-picker-container .date-picker-title {
+  color: #3f2f92 !important;
+  text-align: center !important;
+  margin-bottom: 5px !important;
+  font-size: 24px !important;
+  font-weight: bold !important;
+}
+
+.date-picker-container .date-picker-subtitle {
+  text-align: center !important;
+  color: #667 !important;
+  margin-bottom: 20px !important;
+  font-size: 14px !important;
+}
+
+.date-picker-container .date-options-scroll {
+  max-height: 240px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.date-picker-container .date-options-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.date-picker-container .date-options-scroll::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 3px;
+}
+
+.date-picker-container .date-options-scroll::-webkit-scrollbar-thumb {
+  background: #3f2f92;
+  border-radius: 3px;
+}
+
+.date-picker-container .date-options-scroll::-webkit-scrollbar-thumb:hover {
+  background: #2d2169;
+}
+
+.date-picker-container .date-option {
+  background-color: white;
+  border-radius: 8px;
+  border: 2px solid #e0e0e0;
+  margin-bottom: 12px;
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.date-picker-container .date-option:hover {
+  border-color: #3f2f92;
+  background-color: #f8f6ff;
+}
+
+.date-picker-container .date-option.selected {
+  border-color: #3f2f92;
+  background-color: #f0ebff;
+  box-shadow: 0 4px 8px rgba(63, 47, 146, 0.15);
+}
+
+.date-picker-container .date-radio {
+  width: 20px;
+  height: 20px;
+  margin-right: 16px;
+  accent-color: #3f2f92;
+  cursor: pointer;
+}
+
+.date-picker-container .date-info {
+  flex: 1;
+}
+
+.date-picker-container .date-day-name {
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  color: #3f2f92 !important;
+  margin-bottom: 4px !important;
+}
+
+.date-picker-container .date-full {
+  font-size: 14px !important;
+  color: #555 !important;
+}
+
+.date-picker-container .no-dates-message {
+  text-align: center !important;
+  color: #c00 !important;
+  font-size: 14px !important;
+  padding: 20px !important;
+  background-color: #fff5f5 !important;
+  border-radius: 8px !important;
+  border: 1px solid #fcc !important;
+}
+
+/* Hide GHL PICKUP_DATE field */
+[data-q="PICKUP_DATE"] {
+  display: none !important;
+}
+</style>
+
+<script>
+(function() {
+  // console.log('[Date Picker] Script initialized');
+
+  // Zone to day-of-week mapping (0=Sunday, 1=Monday, etc.)
+  const zoneDayMap = {
+    'ZONE_1': 2, // Tuesday
+    'ZONE_2': 3, // Wednesday
+    'ZONE_3': 4  // Thursday
+  };
+
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                      'July', 'August', 'September', 'October', 'November', 'December'];
+
+  // Single GHL date field for all zones
+  const dateFieldSelector = 'PICKUP_DATE';
+
+  let currentZone = null;
+  let selectedDate = null;
+
+  // Detect current zone from PICKUP_ZONE radio (set by zip-validation on previous slide)
+  function detectZone() {
+    const checkedZone = document.querySelector('input[data-q="PICKUP_ZONE"]:checked');
+    if (checkedZone) {
+      currentZone = checkedZone.value;
+      // console.log('[Date Picker] Detected zone from PICKUP_ZONE radio:', currentZone);
+      return currentZone;
+    }
+
+    // console.warn('[Date Picker] Could not detect zone - PICKUP_ZONE radio not found or not checked');
+    return null;
+  }
+
+  // Get upcoming dates for the specified day of week
+  function getUpcomingDates(dayOfWeek, count = 6) {
+    const dates = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Start from tomorrow
+    let current = new Date(today);
+    current.setDate(current.getDate() + 1);
+
+    // Find the first occurrence of the target day
+    while (current.getDay() !== dayOfWeek) {
+      current.setDate(current.getDate() + 1);
+    }
+
+    // Collect the next 'count' occurrences
+    for (let i = 0; i < count; i++) {
+      dates.push(new Date(current));
+      current.setDate(current.getDate() + 7);
+    }
+
+    return dates;
+  }
+
+  // Format date for display
+  function formatDateDisplay(date) {
+    const dayName = dayNames[date.getDay()];
+    const monthName = monthNames[date.getMonth()];
+    const dayNum = date.getDate();
+    const year = date.getFullYear();
+    return {
+      dayName: dayName,
+      fullDate: `${monthName} ${dayNum}, ${year}`
+    };
+  }
+
+  // Format date for GHL field (MM-DD-YYYY)
+  function formatDateForGHL(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${month}-${day}-${year}`;
+  }
+
+  // Create date option element
+  function createDateOption(date, index) {
+    const formatted = formatDateDisplay(date);
+    const dateValue = formatDateForGHL(date);
+
+    const option = document.createElement('div');
+    option.className = 'date-option';
+    option.dataset.date = dateValue;
+    option.innerHTML = `
+      <input type="radio" class="date-radio" name="pickup_date" id="date-${index}" value="${dateValue}">
+      <div class="date-info">
+        <div class="date-day-name">${formatted.dayName}</div>
+        <div class="date-full">${formatted.fullDate}</div>
+      </div>
+    `;
+
+    option.addEventListener('click', function() {
+      selectDate(dateValue, option);
+    });
+
+    return option;
+  }
+
+  // Handle date selection
+  function selectDate(dateValue, element) {
+    // Update UI
+    document.querySelectorAll('.date-picker-container .date-option').forEach(opt => {
+      opt.classList.remove('selected');
+      opt.querySelector('.date-radio').checked = false;
+    });
+
+    element.classList.add('selected');
+    element.querySelector('.date-radio').checked = true;
+    selectedDate = dateValue;
+
+    // console.log('[Date Picker] Selected date:', dateValue);
+
+    // Update GHL field
+    updateGHLDateField(dateValue);
+  }
+
+  // Update the hidden GHL PICKUP_DATE field
+  function updateGHLDateField(dateValue) {
+    const dateField = document.querySelector(`input[data-q="${dateFieldSelector}"]`);
+
+    if (dateField) {
+      dateField.value = dateValue;
+      dateField.dispatchEvent(new Event('input', { bubbles: true }));
+      dateField.dispatchEvent(new Event('change', { bubbles: true }));
+      // console.log(`[Date Picker] Updated GHL field ${dateFieldSelector} to:`, dateValue);
+    } else {
+      // console.warn(`[Date Picker] GHL date field not found: input[data-q="${dateFieldSelector}"]`);
+    }
+  }
+
+  // Hide native GHL date picker
+  function hideGHLDatePicker() {
+    const field = document.querySelector(`[data-q="${dateFieldSelector}"]`);
+    if (field) {
+      const container = field.closest('.hl_form-group, .form-group, [class*="form-group"]');
+      if (container) {
+        container.style.display = 'none';
+        // console.log('[Date Picker] Hidden GHL PICKUP_DATE container');
+      }
+      field.style.display = 'none';
+    }
+  }
+
+  // Render the date picker
+  function renderDatePicker() {
+    const zone = detectZone();
+    const container = document.getElementById('dateOptionsContainer');
+    const noDatesMsgEl = document.getElementById('noDatesMessage');
+
+    if (!zone || !zoneDayMap[zone]) {
+      // console.warn('[Date Picker] Invalid or no zone detected');
+      container.innerHTML = '';
+      noDatesMsgEl.style.display = 'block';
+      return;
+    }
+
+    const targetDay = zoneDayMap[zone];
+    const dates = getUpcomingDates(targetDay, 12);
+
+    // console.log(`[Date Picker] Generating dates for ${zone} (${dayNames[targetDay]}s):`, dates.length);
+
+    container.innerHTML = '';
+    noDatesMsgEl.style.display = 'none';
+
+    dates.forEach((date, index) => {
+      container.appendChild(createDateOption(date, index));
+    });
+
+    hideGHLDatePicker();
+  }
+
+  // Initialize when DOM is ready
+  function init() {
+    // Small delay to ensure GHL has rendered its fields
+    setTimeout(() => {
+      renderDatePicker();
+    }, 100);
+  }
+
+  // Run initialization
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  // Re-render if zone changes (in case user goes back and changes ZIP)
+  const zoneRadios = document.querySelectorAll('input[data-q="PICKUP_ZONE"]');
+  zoneRadios.forEach(radio => {
+    radio.addEventListener('change', () => {
+      // console.log('[Date Picker] Zone changed, re-rendering');
+      renderDatePicker();
+    });
+  });
+})();
+</script>
+</body>
+</html>

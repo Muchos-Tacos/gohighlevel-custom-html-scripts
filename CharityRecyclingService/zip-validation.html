@@ -3,34 +3,30 @@
     Zip Code Validation Script for Go High Level surveys. Relies on GHL conditional logic.
     Steps:
     Add a slide for ZIP code input (data-q="postal_code")
-    Add a radio button field (data-q="ZIP_VALIDATED") with options "YES" and "NO" (HIDDEN)
+    Add a radio button field (data-q="ZIP_VALID") with options "YES" and "NO" (HIDDEN)
+    Add a radio button field (data-q="PICKUP_ZONE") with options "ZONE_1", "ZONE_2", "ZONE_3" (HIDDEN)
     Paste this script into slide's custom HTML field.
     Add a closing slide with: Thanks Message, Disqualification Message
+    Add a date-selector slide with 3 calendar items corresponding to each zone (HIDDEN).
     Add conditional logic:
-    - Hide Thanks Message IF ZIP_VALIDATED IS EQUAL TO NO
-    - Hide Disqualification Message IF ZIP_VALIDATED IS EQUAL TO YES
-    - Jump to Slide: IF ZIP_VALIDATED IS EQUAL TO YES JUMP TO [NEXT SLIDE]
-    - Jump to Slide: IF ZIP_VALIDATED IS EQUAL TO NO JUMP TO [CLOSING SLIDE]
-    - Disqualify Lead IF ZIP_VALIDATED IS EQUAL TO NO OPEN URL [HOME] ON SUBMIT
-    Replace validZips list to repurpose.
+    - Hide Thanks Message IF ZIP_VALID IS EQUAL TO NO
+    - Hide Disqualification Message IF ZIP_VALID IS EQUAL TO YES
+    - Jump to Slide: IF ZIP_VALID IS EQUAL TO YES JUMP TO [NEXT SLIDE]
+    - Jump to Slide: IF ZIP_VALID IS EQUAL TO NO JUMP TO [CLOSING SLIDE]
+    - Show Zone # calendar IF PICKUP_ZONE IS EQUAL TO ZONE_# (3 items)
+    - Disqualify Lead IF ZIP_VALID IS EQUAL TO NO OPEN URL [HOME] ON SUBMIT
+    Replace zone lists to repurpose.
     */
-	const validZips = new Set([
+	const zone1 = new Set([
 		'32701',
 		'32703',
 		'32707',
-		'32708',
-		'32709',
 		'32712',
 		'32714',
 		'32730',
-		'32732',
 		'32746',
 		'32750',
 		'32751',
-		'32754',
-		'32765',
-		'32766',
-		'32773',
 		'32779',
 		'32789',
 		'32792',
@@ -38,35 +34,12 @@
 		'32801',
 		'32803',
 		'32804',
-		'32805',
-		'32806',
 		'32807',
 		'32808',
-		'32809',
 		'32810',
-		'32811',
-		'32812',
 		'32814',
-		'32817',
 		'32818',
-		'32819',
-		'32820',
-		'32821',
 		'32822',
-		'32824',
-		'32825',
-		'32826',
-		'32827',
-		'32828',
-		'32829',
-		'32830',
-		'32831',
-		'32832',
-		'32833',
-		'32835',
-		'32836',
-		'32837',
-		'32839',
 		'33401',
 		'33403',
 		'33404',
@@ -130,54 +103,127 @@
 		'34712',
 		'34715',
 		'34734',
-		'34741',
-		'34743',
-		'34747',
 		'34756',
 		'34760',
 		'34761',
+	]);
+
+	const zone2 = new Set([
+		'32708',
+		'32709',
+		'32732',
+		'32754',
+		'32765',
+		'32766',
+		'32773',
+		'32817',
+		'32820',
+		'32825',
+		'32826',
+		'32827',
+		'32828',
+		'32829',
+		'32831',
+		'32832',
+		'32833',
 		'34769',
 		'34771',
 		'34772',
 		'34773',
+	]);
+
+	const zone3 = new Set([
+		'32805',
+		'32806',
+		'32809',
+		'32811',
+		'32812',
+		'32819',
+		'32821',
+		'32824',
+		'32830',
+		'32835',
+		'32836',
+		'32837',
+		'32839',
+		'34741',
+		'34743',
+		'34747',
 		'34786',
 		'34787',
 	]);
 
+	const validZips = new Set([...zone1, ...zone2, ...zone3]);
+
 	// Watch for ZIP field changes
 	const zipField = document.querySelector('input[data-q="postal_code"]');
-	console.log('[ZIP Validation] Script initialized');
-	console.log('[ZIP Validation] Valid zips loaded:', validZips.size);
-	console.log('[ZIP Validation] Zip field found:', !!zipField);
+	// console.log('[ZIP Validation] Script initialized');
+	// console.log('[ZIP Validation] Valid zips loaded:', validZips.size);
+	// console.log('[ZIP Validation] Zip field found:', !!zipField);
 
-	if (!zipField) {
-		console.warn(
-			'[ZIP Validation] Zip field not found! Selector: input[data-q="postal_code"]'
-		);
+	// if (!zipField) {
+	// 	console.warn(
+	// 		'[ZIP Validation] Zip field not found! Selector: input[data-q="postal_code"]'
+	// 	);
+	// }
+
+	// Determine which zone a zip belongs to
+	function getZone(zip) {
+		if (zone1.has(zip)) return 'ZONE_1';
+		if (zone2.has(zip)) return 'ZONE_2';
+		if (zone3.has(zip)) return 'ZONE_3';
+		return null;
 	}
 
 	zipField?.addEventListener('input', function () {
 		const zipValue = this.value.trim();
 		const qualified = validZips.has(zipValue) ? 'YES' : 'NO';
-		console.log('[ZIP Validation] Input event fired');
-		console.log('[ZIP Validation] Zip entered:', zipValue);
-		console.log('[ZIP Validation] Is valid:', qualified);
+		const pickupZone = getZone(zipValue);
+		// console.log('[ZIP Validation] Input event fired');
+		// console.log('[ZIP Validation] Zip entered:', zipValue);
+		// console.log('[ZIP Validation] Is valid:', qualified);
+		// console.log('[ZIP Validation] Pickup zone:', pickupZone);
 
-		// Update the radio field - select the option matching the qualified value
+		// Update ZIP_VALID radio
 		const radioOption = document.querySelector(
-			`input[data-q="ZIP_VALIDATED"][value="${qualified}"]`
+			`input[data-q="ZIP_VALID"][value="${qualified}"]`
 		);
-		console.log('[ZIP Validation] Radio option found:', !!radioOption);
+		// console.log('[ZIP Validation] ZIP_VALID radio found:', !!radioOption);
 
 		if (radioOption) {
 			radioOption.checked = true;
 			radioOption.dispatchEvent(new Event('change', { bubbles: true }));
-			console.log('[ZIP Validation] Radio updated to:', qualified);
-		} else {
-			console.warn(
-				'[ZIP Validation] Radio option not found! Selector:',
-				`input[data-q="ZIP_VALIDATED"][value="${qualified}"]`
+			// console.log('[ZIP Validation] ZIP_VALID updated to:', qualified);
+		} // else {
+		// 	console.warn(
+		// 		'[ZIP Validation] ZIP_VALID radio not found! Selector:',
+		// 		`input[data-q="ZIP_VALID"][value="${qualified}"]`
+		// 	);
+		// }
+
+		// Update PICKUP_ZONE radio
+		if (pickupZone) {
+			const zoneRadio = document.querySelector(
+				`input[data-q="PICKUP_ZONE"][value="${pickupZone}"]`
 			);
+			// console.log(
+			// 	'[ZIP Validation] PICKUP_ZONE radio found:',
+			// 	!!zoneRadio
+			// );
+
+			if (zoneRadio) {
+				zoneRadio.checked = true;
+				zoneRadio.dispatchEvent(new Event('change', { bubbles: true }));
+				// console.log(
+				// 	'[ZIP Validation] PICKUP_ZONE updated to:',
+				// 	pickupZone
+				// );
+			} // else {
+			// 	console.warn(
+			// 		'[ZIP Validation] PICKUP_ZONE radio not found! Selector:',
+			// 		`input[data-q="PICKUP_ZONE"][value="${pickupZone}"]`
+			// 	);
+			// }
 		}
 	});
 </script>
