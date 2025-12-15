@@ -114,6 +114,13 @@
 [data-q="PICKUP_DATE"] {
   display: none !important;
 }
+
+/* Disable NEXT button until date is selected */
+.ghl-footer-next.date-picker-disabled {
+  opacity: 0.4 !important;
+  pointer-events: none !important;
+  cursor: not-allowed !important;
+}
 </style>
 
 <script>
@@ -136,6 +143,36 @@
 
   let currentZone = null;
   let selectedDate = null;
+
+  // Check if date picker slide is currently visible
+  function isDatePickerVisible() {
+    const container = document.querySelector('.date-picker-container');
+    if (!container) return false;
+
+    // Check if container is visible (not hidden by GHL slide system)
+    const rect = container.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0 && container.offsetParent !== null;
+  }
+
+  // Disable/enable NEXT button (only when date picker is visible)
+  function setNextButtonDisabled(disabled) {
+    const nextBtn = document.querySelector('.ghl-footer-next');
+    if (nextBtn && isDatePickerVisible()) {
+      if (disabled) {
+        nextBtn.classList.add('date-picker-disabled');
+      } else {
+        nextBtn.classList.remove('date-picker-disabled');
+      }
+    }
+  }
+
+  // Re-enable NEXT button when leaving the date picker slide
+  function cleanupOnSlideChange() {
+    const nextBtn = document.querySelector('.ghl-footer-next');
+    if (nextBtn) {
+      nextBtn.classList.remove('date-picker-disabled');
+    }
+  }
 
   // Detect current zone from PICKUP_ZONE radio (set by zip-validation on previous slide)
   function detectZone() {
@@ -231,6 +268,9 @@
 
     // console.log('[Date Picker] Selected date:', dateValue);
 
+    // Enable NEXT button now that a date is selected
+    setNextButtonDisabled(false);
+
     // Update GHL field
     updateGHLDateField(dateValue);
   }
@@ -268,6 +308,10 @@
     const container = document.getElementById('dateOptionsContainer');
     const noDatesMsgEl = document.getElementById('noDatesMessage');
 
+    // Disable NEXT button until a date is selected
+    setNextButtonDisabled(true);
+    selectedDate = null;
+
     if (!zone || !zoneDayMap[zone]) {
       // console.warn('[Date Picker] Invalid or no zone detected');
       container.innerHTML = '';
@@ -298,11 +342,44 @@
     }, 100);
   }
 
+  // Watch for slide visibility changes
+  function setupSlideObserver() {
+    const container = document.querySelector('.date-picker-container');
+    if (!container) return;
+
+    // Find the slide container (parent that GHL shows/hides)
+    let slideParent = container.closest('[class*="slide"], [class*="step"], [data-slide]');
+    if (!slideParent) slideParent = container.parentElement;
+
+    const observer = new MutationObserver(() => {
+      if (isDatePickerVisible()) {
+        // Slide became visible - disable NEXT if no date selected
+        if (!selectedDate) {
+          setNextButtonDisabled(true);
+        }
+      } else {
+        // Slide hidden - clean up
+        cleanupOnSlideChange();
+      }
+    });
+
+    // Observe style/class changes on ancestors
+    let parent = container;
+    while (parent && parent !== document.body) {
+      observer.observe(parent, { attributes: true, attributeFilter: ['style', 'class'] });
+      parent = parent.parentElement;
+    }
+  }
+
   // Run initialization
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', () => {
+      init();
+      setupSlideObserver();
+    });
   } else {
     init();
+    setupSlideObserver();
   }
 
   // Re-render if zone changes (in case user goes back and changes ZIP)
